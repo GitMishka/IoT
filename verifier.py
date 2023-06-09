@@ -1,33 +1,48 @@
 import pandas as pd
-from sqlalchemy import create_engine
+import psycopg2
+from psycopg2 import sql
 from config import database_config  
-def create_db_engine():
-    database_url = f"postgresql+psycopg2://{database_config['user']}:{database_config['password']}@{database_config['host']}:{database_config['port']}/{database_config['dbname']}"
-    engine = create_engine(database_url)
-    return engine
+import datetime
 
-def check_data_quality():
-    engine = create_db_engine()
+def create_db_conn():
+    conn = psycopg2.connect(
+        dbname = database_config['dbname'],
+        user = database_config['user'],
+        password = database_config['password'],
+        host = database_config['host'],
+        port = database_config['port']
+    )
+    return conn
 
-    with engine.connect() as connection:
-        query = "SELECT COUNT(*) FROM bank_transactions"
-        result = connection.execute(query)
-        print("Number of rows in 'bank_transactions': ", result.fetchone())
+def check_data_quality(conn):
+    cursor = conn.cursor()
     
+    # Query to count number of rows
+    query = "SELECT COUNT(*) FROM bank_transactions"
+    cursor.execute(query)
+    num_rows = cursor.fetchone()[0]
+
+    # Query to get all data
     query = "SELECT * FROM bank_transactions"
-    df = pd.read_sql(query, con=engine)
+    df = pd.read_sql_query(query, con=conn)
 
     missing_values = df.isnull().sum()
-    print("Missing values: \n", missing_values)
-
     duplicate_rows = df.duplicated().sum()
-    print("Duplicate rows: ", duplicate_rows)
-
     data_types = df.dtypes
-    print("Data types: \n", data_types)
-
     inconsistent_transaction_types = df[~df['transaction_type'].isin(['deposit', 'withdrawal'])]
-    print("Inconsistent transaction types: \n", inconsistent_transaction_types)
+
+    return num_rows, missing_values, duplicate_rows, data_types, inconsistent_transaction_types
+
+def write_to_file(num_rows, missing_values, duplicate_rows, data_types, inconsistent_transaction_types):
+    filename = datetime.datetime.now().strftime("%Y%m%d%H%M%S") + "_data_quality.csv"
+    with open(filename, 'w') as f:
+        f.write("Number of rows in 'bank_transactions': " + str(num_rows) + "\n")
+        f.write("Missing values: \n" + str(missing_values) + "\n")
+        f.write("Duplicate rows: " + str(duplicate_rows) + "\n")
+        f.write("Data types: \n" + str(data_types) + "\n")
+        f.write("Inconsistent transaction types: \n" + str(inconsistent_transaction_types) + "\n")
 
 if __name__ == "__main__":
-    check_data_quality()
+    conn = create_db_conn()
+    num_rows, missing_values, duplicate_rows, data_types, inconsistent_transaction_types = check_data_quality(conn)
+    write_to_file(num_rows, missing_values, duplicate_rows, data_types, inconsistent_transaction_types)
