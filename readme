@@ -1,0 +1,69 @@
+# Project: Bank Transaction Emulator and Quality Checker
+
+## Introduction
+This project is comprised of two main components: a bank transaction emulator and a quality checker for a PostgreSQL database where these transactions are stored. The emulator generates random bank transactions and inserts them into the database in real time, while the checker verifies the quality of data in the database.
+
+## Components
+1. **Bank Transaction Emulator**: This Python script simulates bank transactions for random accounts, where each transaction includes:
+   - A unique transaction ID
+   - An account ID
+   - A transaction type (deposit or withdrawal)
+   - An amount 
+   - A timestamp
+
+2. **Data Quality Checker**: This script verifies the quality of data in the database by running several checks, including:
+   - Counting the number of rows
+   - Checking for missing values
+   - Checking for duplicate rows
+   - Verifying data types
+   - Checking for inconsistent transaction types
+
+## Instructions
+
+1. **Setting Up**:
+   - Ensure you have Python installed along with the required packages such as `psycopg2` for PostgreSQL database and `pandas` for data manipulation.
+   - Install the necessary dependencies using pip:
+     ```
+     pip install psycopg2 pandas
+     ```
+   - If you encounter issues with `psycopg2`, try `psycopg2-binary`:
+     ```
+     pip install psycopg2-binary
+     ```
+
+2. **Database Configuration**:
+   - Update the `config.py` file with your PostgreSQL database configuration details. It should contain a dictionary `database_config` as shown below:
+     ```python
+     database_config = {
+         "dbname" : "your_database_name",
+         "user" : "your_username",
+         "password" : "your_password",
+         "host" : "localhost", # or your host
+         "port" : "5432" # or your port
+     }
+     ```
+
+3. **Running the Transaction Emulator**:
+   - Execute the transaction emulator script, `emulator.py`, in your terminal:
+     ```bash
+     python emulator.py
+     ```
+   - This script will create a table in your PostgreSQL database if it does not exist, and then begin inserting randomly generated transactions at an interval of 1 second.
+
+4. **Running the Data Quality Checker**:
+   - Execute the data quality checker script, `checker.py`, in your terminal:
+     ```bash
+     python checker.py
+     ```
+   - This script will perform various data quality checks and write the results into a file with a timestamp in its name.
+
+## Notes
+
+Please ensure that both scripts are run in the same Python environment where all the necessary dependencies are installed. Remember to update the `config.py` file with your own PostgreSQL database details.
+
+## Future Enhancements
+
+1. More complex transaction types and logic can be added to the emulator.
+2. More advanced data quality checks can be added to the checker.
+3. Automated scheduling of the quality checker script can be set up.
+4. Real-time data quality checks and alerts can be implemented.
